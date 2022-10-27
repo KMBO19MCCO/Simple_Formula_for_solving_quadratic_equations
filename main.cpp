@@ -24,7 +24,7 @@ void simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
         fp_t fma_bzc = fma(b, z, c);
         f_z = fma(a, pow(z, 2), fma_bzc);
         cout << "f_z = " << f_z<< endl;
-        if (f_z >= 0 && f_z <= FLT_EPSILON) f_z = 0;
+        //if (f_z >= 0 && f_z <= FLT_EPSILON) f_z = 0;
 
         //вычислим другими способами, чтоб посмотреть на точность
         /*fp_t f_z1 = a * pow(z, 2) + b * z + c;
