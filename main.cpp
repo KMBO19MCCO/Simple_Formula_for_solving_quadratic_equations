@@ -1,3 +1,4 @@
+#define FLT_EPSILON 1.19209290e-07F // float
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -12,26 +13,58 @@ void simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
     fp_t a, b, c, z, f_z;
 
     //Coefficients
-    a = coefficients[0];
+    a = coefficients[2];
     b = coefficients[1];
-    c = coefficients[2];
-    cout << endl << "\tQuadratic equation:" << endl << "\t " << a << "*x^2 + " << b << "*x + " << c << endl;
+    c = coefficients[0];
+    cout << endl << "\tQuadratic equation:" << endl << "\t " << a << "*x^2 + " << b << "*x + " << c << " = 0 "<< endl;
 
-    z = -b / (2 * a);
-    f_z = a * pow(z, 2) + b * z + c;
-    if (f_z <= 0) {
-        roots[0] = z + sqrt(-f_z / a);
-        roots[1] = z - sqrt(-f_z / a);
-        cout << "\t\tRoots: " << endl;
-        cout << "\t x1 = " << roots[0] << "; x2 = " << roots[1] << endl;
+    if (a!=0) {
+        z = -b / (2 * a);
+        //Формула: f_z = a * pow(z, 2) + b * z + c;
+        fp_t fma_bzc = fma(b, z, c);
+        f_z = fma(a, pow(z, 2), fma_bzc);
+        cout << "f_z = " << f_z<< endl;
+        if (f_z >= 0 && f_z <= FLT_EPSILON) f_z = 0;
+
+        //вычислим другими способами, чтоб посмотреть на точность
+        /*fp_t f_z1 = a * pow(z, 2) + b * z + c;
+        cout << "f_z1 = " << f_z1<< endl;
+
+        fp_t f_z2 = a * pow(z, 2) + fma_bzc;
+        cout << "f_z2 = " << f_z2<< endl;
+         */
+
+        if (f_z <= 0 ) {
+            roots[0] = z + sqrt(-f_z / a);
+            roots[1] = z - sqrt(-f_z / a);
+            cout << "\t\tReal roots: " << endl;
+            cout << "\t x1 = " << roots[0] << "; x2 = " << roots[1] << endl;
+        }
+        else {
+            std::complex<fp_t> sqrt_f_z = std::sqrt(std::complex<fp_t>((-f_z / a)));
+            std::complex<fp_t> root1(z, sqrt_f_z.imag());
+            std::complex<fp_t> root2(z, -sqrt_f_z.imag());
+
+            // выясним, действительно ли корень комплексный - попробуем отбросить комплексную часть и подставим в уравнение
+            // если результат будет > FLT_EPSILON - > корень комплексный, иначе - действительный и полученная
+            // комплексная часть - мусор...
+
+            fp_t fma_b_root_c = fma(b, root1.real(), c);
+            fp_t fma_res = fma(a, pow(root1.real(), 2),fma_b_root_c);
+            cout << "fma_res = " << fma_res << endl;
+            if (fabs(fma_res) <= FLT_EPSILON)
+            {
+                cout << "\t\tNot complex roots!"<<endl;
+                cout<< "\t\tReal roots: "<< endl;
+                cout << "x1 = " << root1.real() << "; x2 = " << root2.real() << endl;
+            }
+            else {
+                cout << "\tComplex roots: " << endl;
+                cout << "x1 = " << root1 << "; x2 = " << root2 << endl;
+            }
+        }
     }
-    else{
-        std::complex<fp_t> sqrt_f_z = std::sqrt(std::complex<fp_t>((-f_z / a)));
-        std::complex<fp_t > root1( z, sqrt_f_z.imag());
-        std::complex<fp_t> root2( z, -sqrt_f_z.imag());
-        cout << "\tComplex roots: " << endl;
-        cout << "x1 = " << root1 << "; x2 = " << root2 << endl;
-    }
+    else cout << "Not Quadratic equation!"<< endl;
 }
 
 template<typename fp_t>
@@ -59,45 +92,35 @@ auto testPolynomial(unsigned int roots_count) {
 }
 
 int main() {
-    /*auto p = 2;
-    vector<float> roots(p);
-    vector<float> roots_computed(p);
-    vector<float> coefficients(p + 1);
-    auto result = generate_polynomial<float>(p, 0, 2, 0, 10.0 / 5, -10, 10, roots, coefficients);
-
-    simple_formula(coefficients, roots_computed);
-    float max_deviation;
-    compare_roots<float>(p, p, roots, roots, max_deviation);
-
-    cout << "max deviation: " << max_deviation << endl;
-
-    for (auto root: roots_computed) {
-        cout << root << ' ';
-    }
-    cout << endl;
-    for (auto root: roots) {
-        cout << root << ' ';
-    }*/
 
     float deviation, max_deviation = 0;
-    for (auto i = 0; i < 100; ++i) {
+    for (auto i = 0; i < 500; ++i) {
         deviation = testPolynomial<float>(2);
+        cout << "deviation = " << deviation<< endl;
         if (deviation > max_deviation) {
             max_deviation = deviation;
         }
     }
+    cout<< endl<<"MAX_deviation = "<< max_deviation<<endl;
 
-    cout<< "max_deviation = "<< max_deviation<<endl;
 
-   /*
+
+    cout << endl<< "\t\tEXAMPLES: "<< endl;
+
     //Close roots
-    vector<float> koef1 = {1, -0.00021, 0.000000011};
+    //Coef - > c, b, a
+    vector<float> koef1 = {0.000000011, -0.00021, 1};
     vector<float> r1(2);
     simple_formula(koef1,r1);
 
     //Complex roots
-    vector<float> koef2 = {1, 1, 1};
+    //1*x^2 + 0.163012*x + 0.00664325 = 0
+    vector<float> koef2 = {0.00664325, 0.163012, 1};
     vector<float> r2(2);
     simple_formula(koef2,r2);
-    */
+
+
+
+
+
 }
