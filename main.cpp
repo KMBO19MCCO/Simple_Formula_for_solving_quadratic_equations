@@ -68,7 +68,6 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
                 // выясним, действительно ли корень комплексный:
                 // если std::abs(root1.imag())> std::abs(root1)*std::numeric_limits<fp_t>::epsilon() - > корень комплексный, иначе - действительный и полученная
                 // комплексная часть - мусор...
-
                 if (std::abs(root1.imag()) > std::abs(root1) * std::numeric_limits<fp_t>::epsilon()) {
                     //значит корень комплексный
                     cnt_real_roots = 0; // число действительных корней = 0
