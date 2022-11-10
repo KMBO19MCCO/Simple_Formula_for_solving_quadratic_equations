@@ -13,8 +13,9 @@ using namespace std;
 
 //A simple formula for solving quadratic equations using function evaluation
 template<typename fp_t>
-int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots, int cnt_real_roots = 2) {
+int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
     fp_t a, b, c, z, f_z;
+    int cnt_real_roots = 0;
 
     //Coefficients - > c, b, a
     a = coefficients[2];
@@ -24,43 +25,59 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots, int
 
     if (a!=0) {
         z = -b / (2 * a);
-        //Формула: f_z = a * pow(z, 2) + b * z + c;
-        fp_t fma_bzc = fma(b, z, c);
-        f_z = fma(a, z*z, fma_bzc);
 
-        if (f_z <= 0 ) {
-            fp_t sqrt_f =  sqrt(-f_z / a);
-            //z >= 0 ? roots[0] = z + sqrt_f , roots[1] =  roots[0] - 2*sqrt_f : roots[0] = z - sqrt_f, roots[1] = roots[0] + 2*sqrt_f;
-            cnt_real_roots = 2; //число действительных корней = 2
-            if(z >= 0) {
-                roots[0] = z +  sqrt_f;
-                roots[1] =  roots[0] -  2*sqrt_f;
-            }
-            else{
-                roots[0] = z -  sqrt_f;
-                roots[1] = roots[0] +  2*sqrt_f;
-            }
-            cout << "\t\tReal roots: " << endl;
-            cout << "\t x1 = " << roots[0] << "; x2 = " << roots[1] << endl;
-        }
-        else {
-            std::complex<fp_t> sqrt_f_z = std::sqrt(std::complex<fp_t>((-f_z / a)));
-            std::complex<fp_t> root1(z, sqrt_f_z.imag());
-            std::complex<fp_t> root2(z, -sqrt_f_z.imag());
-            // выясним, действительно ли корень комплексный:
-            // если std::abs(root1.imag())> std::abs(root1)*std::numeric_limits<fp_t>::epsilon() - > корень комплексный, иначе - действительный и полученная
-            // комплексная часть - мусор...
+        if(z!= std::numeric_limits<fp_t>::infinity()) {
+            //Формула: f_z = a * pow(z, 2) + b * z + c;
+            fp_t fma_bzc = fma(b, z, c);
+            f_z = fma(a, z * z, fma_bzc);
 
-            if (std::abs(root1.imag())> std::abs(root1)*std::numeric_limits<fp_t>::epsilon())
-            {
-                //значит корень комплексный
-                cnt_real_roots = 0; // число действительных корней = 0
-            }
-            else { // корень действительный
+            if (f_z <= 0) {
+                fp_t sqrt_f = sqrt(-f_z / a);
+                if(sqrt_f!=std::numeric_limits<fp_t>::infinity()) {
+                    cnt_real_roots = 2; //число действительных корней = 2
+                    if(c > 0){ //уравнение имеет 2 одинаковых по знаку корня
+                        if(b < 0){ // оба корня положительны (z > 0)
+                            roots[0] = z + sqrt_f; // больший по модулю
+                            roots[1] = c/roots[0];
+                            cout<<"x1 = "<< roots[0]<< ", x2 = "<< roots[1]<< endl;
+                        }
+                        if (b > 0){// оба корня отрицательны (z < 0)
+                            roots[0] = z - sqrt_f; // больший по модулю
+                            roots[1] = c/ roots[0];
+                            cout<<"x1 = "<< roots[0]<< ", x2 = "<< roots[1]<< endl;
+                        }
+                    }
+                    if (c <= 0){ // 2 различных по знаку корня
+                        if(b < 0){ // больший по модулю положителен (z > 0)
+                            roots[0] = z + sqrt_f; // больший по модулю
+                            roots[1] = c/ roots[0];
 
-                cout<< "\t\tNot complex roots! Real roots: "<< endl;
-                roots[0] = roots[1] =  root1.real();
-                cnt_real_roots = 2; // число действительных корней = 2
+                            cout<<"x1 = "<< roots[0]<< ", x2 = "<< roots[1]<< endl;
+                        }
+                        if(b > 0) { // больший по модулю отрицателен (z < 0)
+                            roots[0] = z - sqrt_f; // больший по модулю
+                            roots[1] = c/ roots[0];
+                            cout<<"x1 = "<< roots[0]<< ", x2 = "<< roots[1]<< endl;
+                        }
+                    }
+                }
+            } else {
+                std::complex<fp_t> sqrt_f_z = std::sqrt(std::complex<fp_t>((-f_z / a)));
+                std::complex<fp_t> root1(z, sqrt_f_z.imag());
+                std::complex<fp_t> root2(z, -sqrt_f_z.imag());
+                // выясним, действительно ли корень комплексный:
+                // если std::abs(root1.imag())> std::abs(root1)*std::numeric_limits<fp_t>::epsilon() - > корень комплексный, иначе - действительный и полученная
+                // комплексная часть - мусор...
+
+                if (std::abs(root1.imag()) > std::abs(root1) * std::numeric_limits<fp_t>::epsilon()) {
+                    //значит корень комплексный
+                    cnt_real_roots = 0; // число действительных корней = 0
+                } else { // корень действительный
+
+                    cout << "\t\tNot complex roots! Real roots: " << endl;
+                    roots[0] = roots[1] = root1.real();
+                    cnt_real_roots = 2; // число действительных корней = 2
+                }
             }
         }
     }
