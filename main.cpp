@@ -9,7 +9,7 @@
 #include <limits>
 #include "excerpt.h"
 
-//#define DEBUG
+//#define DEBUG // раскомментировать для вывода отладочного кода (само уравнение+корни)
 #define MAX_DISTANCE 10e-5
 
 using namespace std;
@@ -41,21 +41,21 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
                     cnt_real_roots = 2; //число действительных корней = 2
                     if (c > 0) { //уравнение имеет 2 одинаковых по знаку корня
                         if (b < 0) { // оба корня положительны (z > 0)
-                            roots[0] = z + sqrt_f; // больший по модулю
+                            roots[0] = z + sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
                         if (b > 0) {// оба корня отрицательны (z < 0)
-                            roots[0] = z - sqrt_f; // больший по модулю
+                            roots[0] = z - sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
                     }
                     if (c <= 0) { // 2 различных по знаку корня
                         if (b < 0) { // больший по модулю положителен (z > 0)
-                            roots[0] = z + sqrt_f; // больший по модулю
+                            roots[0] = z + sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
                         if (b > 0) { // больший по модулю отрицателен (z < 0)
-                            roots[0] = z - sqrt_f; // больший по модулю
+                            roots[0] = z - sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
                     }
@@ -65,20 +65,22 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
 #endif
             } else {
                 std::complex<fp_t> sqrt_f_z = std::sqrt(std::complex<fp_t>((-f_z / a)));
-                std::complex<fp_t> root1(z, sqrt_f_z.imag());
-                std::complex<fp_t> root2(z, -sqrt_f_z.imag());
-                // выясним, действительно ли корень комплексный:
-                // если std::abs(root1.imag())> std::abs(root1)*std::numeric_limits<fp_t>::epsilon() - > корень комплексный, иначе - действительный и полученная
-                // комплексная часть - мусор...
-                if (std::abs(root1.imag()) > std::abs(root1) * std::numeric_limits<fp_t>::epsilon()) {
-                    //значит корень комплексный
-                    cnt_real_roots = 0; // число действительных корней = 0
-                } else { // корень действительный
+                if (sqrt_f_z != std::numeric_limits<fp_t>::infinity()){
+                    std::complex<fp_t> root1(z, sqrt_f_z.imag());
+                    std::complex<fp_t> root2(z, -sqrt_f_z.imag());
+                    // выясним, действительно ли корень комплексный:
+                    // если std::abs(root1.imag())> std::abs(root1)*std::numeric_limits<fp_t>::epsilon() - > корень комплексный, иначе - действительный и полученная
+                    // комплексная часть - мусор...
+                    if (std::abs(root1.imag()) > std::abs(root1) * std::numeric_limits<fp_t>::epsilon()) {
+                        //значит корень комплексный
+                        cnt_real_roots = 0; // число действительных корней = 0
+                    }else { // корень действительный
 #ifdef DEBUG
-                    cout << "\t\tNot complex roots! Real roots: " << endl;
+                        cout << "\t\tNot complex roots! Real roots: " << endl;
 #endif
-                    roots[0] = roots[1] = root1.real();
-                    cnt_real_roots = 2; // число действительных корней = 2
+                        roots[0] = roots[1] = root1.real();
+                        cnt_real_roots = 2; // число действительных корней = 2
+                    }
                 }
             }
         }
