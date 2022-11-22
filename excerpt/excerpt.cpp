@@ -375,7 +375,7 @@ std::vector<fp_t> return_real_roots(std::vector<std::complex<fp_t>> &roots_to_ch
 {
     std::vector<fp_t> roots_to_check_real;
     for (auto root: roots_to_check) {
-        if (std::numeric_limits<fp_t>::epsilon() > abs(root.imag())) {
+        if (std::numeric_limits<fp_t>::epsilon() > std::abs(root) *abs(root.imag())) {
             roots_to_check_real.push_back(root.real());
         }
     }
@@ -457,5 +457,25 @@ template int compare_roots_complex<float>(
         float &max_absolute_error,
         float &max_relative_error);
 
+template int compare_roots_complex<double>(
+        unsigned N_roots_to_check,
+        unsigned N_roots_ground_truth,
+        std::vector<std::complex<double>> &roots_to_check,
+        std::vector<double> &roots_ground_truth,
+        double &max_absolute_error,
+        double &max_relative_error);
+
+template int compare_roots_complex<long double>(
+        unsigned N_roots_to_check,
+        unsigned N_roots_ground_truth,
+        std::vector<std::complex<long double>> &roots_to_check,
+        std::vector<long double> &roots_ground_truth,
+        long double &max_absolute_error,
+        long double &max_relative_error);
+
+
 template std::vector<float> return_real_roots(std::vector<std::complex<float>> &roots_to_check);
 
+template std::vector<double> return_real_roots(std::vector<std::complex<double>> &roots_to_check);
+
+template std::vector<long double> return_real_roots(std::vector<std::complex<long double>> &roots_to_check);

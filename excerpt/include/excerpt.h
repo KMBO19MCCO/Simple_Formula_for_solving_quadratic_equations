@@ -74,8 +74,10 @@ int compare_roots_complex(unsigned N_roots_to_check, // number of roots in roots
                           fp_t &max_relative_error);
 
 
+//The function checks the roots for complexity and returns the vector of real roots
 template<typename fp_t>
 std::vector<fp_t> return_real_roots(std::vector<std::complex<fp_t>> &roots_to_check);
+
 
 
 #endif //POLYROOTS1234_HPP

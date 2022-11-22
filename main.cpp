@@ -16,6 +16,7 @@
 using namespace std;
 
 //A simple formula for solving quadratic equations using function evaluation
+// МЕТОД С ВЕЩЕСТВЕННЫМИ ВЫЧИСЛЕНИЯМИ
 template<typename fp_t>
 int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
     fp_t a, b, c, z, f_z;
@@ -95,8 +96,7 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
 }
 
 
-
-// "НОВЫЙ" МЕТОД - КОМПЛЕКСНЫЕ ВЫЧИСЛЕНИЯ
+// МЕТОД С КОМПЛЕКСНЫМИ ВЫЧИСЛЕНИЯМИ
 template<typename fp_t>
 std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coefficients, std::vector<std::complex<fp_t>> &roots)
 {
@@ -172,6 +172,7 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
 #endif
                     }
                 }
+
             }
 
 //#ifdef DEBUG
@@ -181,6 +182,7 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
 
     } return roots; // возвращаем вектор комплексных корней
 }
+
 
 template<typename fp_t>
 auto testPolynomial(unsigned int roots_count) {
@@ -213,36 +215,26 @@ auto testPolynomial(unsigned int roots_count) {
 
 template<typename fp_t>
 fp_t testPolynomial_complex(unsigned int roots_count) {
-    fp_t  max_absolute_error, max_relative_error;
-    std::vector<std::complex<fp_t>> roots_computed(roots_count);
-    vector<fp_t> roots(roots_count), roots_computed_real(roots_count) ;
+    fp_t max_absolute_error, max_relative_error;
+    std::vector<std::complex<fp_t>> roots_computed(roots_count);//вектор компл. корней
+    vector<fp_t> roots(roots_count), roots_computed_real(roots_count); //вектор вещ.корней
     vector<fp_t> coefficients(roots_count + 1);
     generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, numeric_limits<fp_t>::min(), -1, 1, roots, coefficients);
-    roots_computed = simple_formula_complex<fp_t>(coefficients, roots_computed); //находим корни
+    roots_computed = simple_formula_complex<fp_t>(coefficients, roots_computed); //находим корни - комплексный вектор
 
-    roots_computed_real = return_real_roots(roots_computed); //проверяем на комплексность - > отбрасываем
+    if (!roots_computed.empty()) // если корни найдены
+    {
+        roots_computed_real = return_real_roots(roots_computed); //проверяем на комплексность - > отбрасываем
+        // получаем вектор вещественных корней
+        if (!roots_computed_real.empty()) { //если корни действительные - сравниваем
 
-    if(!roots_computed_real.empty()) { //если корни действительные - сравниваем
-
-        auto  result = compare_roots<fp_t>(roots_computed_real.size(), roots.size(), roots_computed_real, roots,
-                                                   max_absolute_error,max_relative_error);
-        switch (result) {
-            case PR_2_INFINITE_ROOTS:
-                cout << "INFINITE ROOTS";
-                break;
-            case PR_AT_LEAST_ONE_ROOT_IS_FAKE:
-                cout << "\nAT LEAST ONE ROOT IS FAKE";
-                break;
-            case PR_AT_LEAST_ONE_ROOT_LOST:
-                cout << "AT LEAST ONE ROOT LOST";
-                break;
-            default:
-                break;
+            compare_roots<fp_t>(roots_computed_real.size(), roots.size(), roots_computed_real, roots,
+                                          max_absolute_error, max_relative_error);
+            return max_absolute_error;
         }
-        return max_absolute_error;
+        else return std::numeric_limits<fp_t>::infinity(); //если корни все же комплексные
     }
-
-    else return std::numeric_limits<fp_t>::infinity(); //если корни все же комплексные
+    else return std::numeric_limits<fp_t>::infinity();
 }
 
 int main() {
@@ -259,7 +251,7 @@ int main() {
     cout << endl << "MAX_deviation = " << max_deviation << endl;
 
 
-    // 2 МЕТОД - КОМПЛЕКСНЫЕ ВЫЧИСЛЕНИЯ
+    // МЕТОД С КОМПЛЕКСНЫМИ ВЫЧИСЛЕНИЯМИ
     float max_deviation_for_complex = 0;
     for (auto i = 0; i < 100'000; ++i) {
 
