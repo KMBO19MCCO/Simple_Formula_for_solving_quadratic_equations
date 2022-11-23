@@ -390,21 +390,14 @@ int compare_roots_complex(unsigned N_roots_to_check, // number of roots in roots
                           fp_t &max_absolute_error, // here the greatest among the smallest deviations of the roots in (roots_to_check) and (roots_ground_truth)
                           fp_t &max_relative_error) {
     std::vector<fp_t> roots_to_check_parsed;
-    fp_t cnt_real_roots = 0;
     for (auto root: roots_to_check) {
         if (std::numeric_limits<fp_t>::epsilon() > abs(root.imag())) {
             roots_to_check_parsed.push_back(root.real());
-            cnt_real_roots++;
+
         }
     }
-    if(cnt_real_roots!=0)
-        return compare_roots(roots_to_check_parsed.size(), N_roots_ground_truth, roots_to_check_parsed, roots_ground_truth,
+    return compare_roots(roots_to_check_parsed.size(), N_roots_ground_truth, roots_to_check_parsed, roots_ground_truth,
                         max_absolute_error, max_relative_error);
-    else
-    {
-
-        return std::numeric_limits<fp_t>::infinity();
-    }
 }
 
 template int generate_polynomial<float>(unsigned P, unsigned N_pairs_of_complex_roots, unsigned N_clustered_roots,
