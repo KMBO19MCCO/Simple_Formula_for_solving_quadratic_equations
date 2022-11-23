@@ -295,7 +295,6 @@ int generate_polynomial(
     return -1; // unreachable, means a flaw in control here
 }
 
-
 // Compares two vectors of roots; root orderings play no role. For each entry in (roots_ground_truth),
 // the closest entry in (roots_to_check) is found and corresponding distance found. Among such distances
 // the largest will be stored to (max_deviation)
@@ -478,3 +477,5 @@ template std::vector<float> return_real_roots(std::vector<std::complex<float>> &
 template std::vector<double> return_real_roots(std::vector<std::complex<double>> &roots_to_check);
 
 template std::vector<long double> return_real_roots(std::vector<std::complex<long double>> &roots_to_check);
+
+

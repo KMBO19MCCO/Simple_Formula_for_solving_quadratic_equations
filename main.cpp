@@ -251,6 +251,7 @@ int main() {
     cout << endl << "MAX_deviation = " << max_deviation << endl;
 
 
+
     // МЕТОД С КОМПЛЕКСНЫМИ ВЫЧИСЛЕНИЯМИ
     float max_deviation_for_complex = 0;
     for (auto i = 0; i < 100'000; ++i) {
