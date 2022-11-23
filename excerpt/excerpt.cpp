@@ -473,7 +473,6 @@ template int compare_roots_complex<long double>(
         long double &max_absolute_error,
         long double &max_relative_error);
 
-
 template std::vector<float> return_real_roots(std::vector<std::complex<float>> &roots_to_check);
 
 template std::vector<double> return_real_roots(std::vector<std::complex<double>> &roots_to_check);
