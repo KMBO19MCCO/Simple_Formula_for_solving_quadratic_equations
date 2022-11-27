@@ -42,11 +42,11 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
                 if (sqrt_f != std::numeric_limits<fp_t>::infinity()) {
                     cnt_real_roots = 2; //число действительных корней = 2
 
-                        if (b < 0) {
+                        if (b <= 0) { // (z >= 0)
                             roots[0] = z + sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
-                        else if (b > 0) {
+                        else {      // (z < 0)
                             roots[0] = z - sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
@@ -117,13 +117,13 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
                 std::complex<fp_t> z_complex = std::complex<fp_t>(z);
                 std::complex<fp_t> c_complex = std::complex<fp_t>(c);
 
-                    if (b < 0) { //  (z > 0)
+                    if (b <= 0) { //  (z >= 0)
 
                         roots[0] = z_complex + sqrt_f;
 
                         roots[1] = c_complex/ roots[0];
                     }
-                    else if (b > 0) {//  (z < 0)
+                    else {//  (z < 0)
                         roots[0] = z_complex - sqrt_f;
 
                         roots[1] = c_complex/ roots[0];
