@@ -20,7 +20,7 @@ using namespace std;
 template<typename fp_t>
 int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
     fp_t a, b, c, z, f_z;
-    int cnt_real_roots = 0;
+    int cnt_real_roots = 0; // число вещественных корней
 
     //Coefficients - > c, b, a
     a = coefficients[2];
@@ -41,27 +41,17 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
                 fp_t sqrt_f = sqrt(-f_z / a);
                 if (sqrt_f != std::numeric_limits<fp_t>::infinity()) {
                     cnt_real_roots = 2; //число действительных корней = 2
-                    if (c > 0) { //уравнение имеет 2 одинаковых по знаку корня
-                        if (b < 0) { // оба корня положительны (z > 0)
+
+                        if (b < 0) {
                             roots[0] = z + sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
-                        if (b > 0) {// оба корня отрицательны (z < 0)
+                        else if (b > 0) {
                             roots[0] = z - sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
                         }
-                    }
-                    if (c <= 0) { // 2 различных по знаку корня
-                        if (b < 0) { // больший по модулю положителен (z > 0)
-                            roots[0] = z + sqrt_f; // бОльший по модулю
-                            roots[1] = c / roots[0];
-                        }
-                        if (b > 0) { // больший по модулю отрицателен (z < 0)
-                            roots[0] = z - sqrt_f; // бОльший по модулю
-                            roots[1] = c / roots[0];
-                        }
-                    }
                 }
+                else cnt_real_roots = 0;
 #ifdef DEBUG
                 cout << "x1 = " << roots[0] << ", x2 = " << roots[1] << endl;
 #endif
@@ -86,6 +76,7 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
                 }
             }
         }
+        else cnt_real_roots = 0;
     } else {
 #ifdef DEBUG
         cout << "Not Quadratic equation!" << endl;
@@ -126,59 +117,26 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
                 std::complex<fp_t> z_complex = std::complex<fp_t>(z);
                 std::complex<fp_t> c_complex = std::complex<fp_t>(c);
 
-                if (c > 0) { //уравнение имеет 2 одинаковых по знаку корня
-                    if (b < 0) { // оба корня положительны (z > 0)
+                    if (b < 0) { //  (z > 0)
 
                         roots[0] = z_complex + sqrt_f;
-#ifdef DEBUG
-                        cout<< "\nroots[0] = " << roots[0];
-#endif
+
                         roots[1] = c_complex/ roots[0];
-#ifdef DEBUG
-                        cout<< "\nroots[1] = " << roots[1];
-#endif
+                    }
+                    else if (b > 0) {//  (z < 0)
+                        roots[0] = z_complex - sqrt_f;
+
+                        roots[1] = c_complex/ roots[0];
 
                     }
-                    else if (b > 0) {// оба корня отрицательны (z < 0)
-                        roots[0] = z_complex - sqrt_f;
-#ifdef DEBUG
-                        cout<< "\nroots[0] = " << roots[0];
-#endif
-                        roots[1] = c_complex/ roots[0];
-#ifdef DEBUG
-                        cout<< "\nroots[1] = " << roots[1];
-#endif
-                    }
-                }
-                else if (c <= 0) { // 2 различных по знаку корня
-                    if (b < 0) { // больший по модулю положителен (z > 0)
-                        roots[0] = z_complex + sqrt_f;
-#ifdef DEBUG
-                        cout<< "\nroots[0] = " << roots[0];
-#endif
-                        roots[1] = c_complex/ roots[0];
-#ifdef DEBUG
-                        cout<< "\nroots[1] = " << roots[1];
-#endif
-                    }
-                    else if (b > 0) { // больший по модулю отрицателен (z < 0)
-                        roots[0] = z_complex - sqrt_f;
-#ifdef DEBUG
-                        cout<< "\nroots[0] = " << roots[0];
-#endif
-                        roots[1] = c_complex/ roots[0];
-#ifdef DEBUG
-                        cout<< "\nroots[1] = " << roots[1];
-#endif
-                    }
-                }
-
             }
+            else return roots;
 
-//#ifdef DEBUG
+#ifdef DEBUG
            // cout << "\nx1 = " << roots[0] << ", x2 = " << roots[1] << endl;
-//#endif
+#endif
         }
+        else return roots; //если z == inf -> возвращаем пустой вектор(в testPolynomial_complex поверяем на пустоту)
 
     } return roots; // возвращаем вектор комплексных корней
 }
