@@ -314,6 +314,33 @@ int compare_roots(
 }
 
 
+
+// For complex vector roots
+template<typename fp_t>
+int compare_roots(
+
+        unsigned N_roots_to_check_complex, // number of roots in (roots_to_check_complex)
+        unsigned N_roots_ground_truth,  // number of roots in (roots_ground_truth)
+        std::vector<std::complex<fp_t>> &roots_to_check_complex,
+        std::vector<fp_t> &roots_ground_truth, // one should take into account only first (N_roots_ground_truth) roots here
+        fp_t &max_absolute_error, // here the greatest among the smallest deviations of the roots in (roots_to_check) and (roots_ground_truth)
+        // will be placed
+        fp_t &max_relative_error) // here the greatest relative error among all the roots found will be placed
+{
+
+    std::vector<fp_t> roots_to_check;
+    for (auto root: roots_to_check_complex) {
+        if (std::numeric_limits<fp_t>::epsilon() > abs(root.imag())) {
+            roots_to_check.push_back(root.real());
+        }
+    }
+    if(!roots_to_check.empty())
+        compare_roots(roots_to_check.size(),N_roots_ground_truth,roots_to_check,roots_ground_truth, max_absolute_error, max_relative_error);
+    else return 0;
+}
+
+
+
 // checks attainable number of real roots in a polynomial: a*x^4 + b*x^3 + c*x^2 + d*x + e; multiple root is treated as separate roots
 template<typename fp_t>
 int number_of_roots(unsigned P, // polynomial degree
@@ -360,9 +387,14 @@ int compare_roots_complex(unsigned N_roots_to_check, // number of roots in roots
             roots_to_check_parsed.push_back(root.real());
         }
     }
-    return compare_roots(roots_to_check_parsed.size(), N_roots_ground_truth, roots_to_check_parsed, roots_ground_truth,
+
+    if(!roots_to_check_parsed.empty())
+        return compare_roots(roots_to_check_parsed.size(), N_roots_ground_truth, roots_to_check_parsed, roots_ground_truth,
                          max_absolute_error, max_relative_error);
+    else return 0;
 }
+
+
 
 template int generate_polynomial<float>(unsigned P, unsigned N_pairs_of_complex_roots, unsigned N_clustered_roots,
                                         unsigned N_multiple_roots, float max_distance_between_clustered_roots,
@@ -418,6 +450,35 @@ template int compare_roots<long double>(
         std::vector<long double> &roots_ground_truth,
         long double &max_absolute_error,
         long double &max_relative_error);
+
+
+//  COMPLEX
+template int compare_roots<float>(
+        unsigned N_roots_to_check_complex,
+        unsigned N_roots_ground_truth,
+        std::vector<std::complex<float>> &roots_to_check_complex,
+        std::vector<float> &roots_ground_truth,
+        float &max_absolute_error,
+        float &max_relative_error);
+
+
+
+template int compare_roots<double>(
+        unsigned N_roots_to_check_complex,
+        unsigned N_roots_ground_truth,
+        std::vector<std::complex<double>> &roots_to_check_complex,
+        std::vector<double> &roots_ground_truth,
+        double &max_absolute_error,
+        double &max_relative_error);
+
+template int compare_roots<long double>(
+        unsigned N_roots_to_check_complex,
+        unsigned N_roots_ground_truth,
+        std::vector<std::complex<long double>> &roots_to_check_complex,
+        std::vector<long double> &roots_ground_truth,
+        long double &max_absolute_error,
+        long double &max_relative_error);
+
 
 
 template int compare_roots_complex<float>(unsigned N_roots_to_check, // number of roots in roots_to_check

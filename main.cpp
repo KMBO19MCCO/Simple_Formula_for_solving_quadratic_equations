@@ -31,11 +31,12 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
 #endif
 
     // не проверяем на а!=0 , т. к. далее проверяем z на бесконечность
-        z = -b / (2 * a);
+        z = -b / (2*a);
         if (!isinf(z)) {
             //Формула: f_z = a * pow(z, 2) + b * z + c;
-            fp_t fma_bzc = fma(b, z, c);
-            f_z = fma(a, z * z, fma_bzc);
+            // То есть f_z  = a*b^2/4a^2 + b*z + c = (-b/2a)*(-b/2) + b*z + c = (-b/2)*z + b*z + c = (b/2)*z + c
+
+            f_z = fma(b , z/2 , c);
 
             // f_z = -(b^2 - 4ac)/4a = -D/4a - - - > D>=0(f_z<=0) - real, D<0(f_z>0) - complex
             if (f_z <= 0) {
@@ -46,13 +47,17 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
                         if (b <= 0) { // (z >= 0)
                             roots[0] = z + sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
+                            if(isinf(roots[1])) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
+                                cnt_real_roots=1;
                         }
                         else {      // (z < 0)
                             roots[0] = z - sqrt_f; // бОльший по модулю
                             roots[1] = c / roots[0];
+                            if(isinf(roots[1])) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
+                                cnt_real_roots=1;
                         }
                 }
-                else return -1;
+                else return -1; // корни находятся очень далеко друг от друга - возвращаем -1(в testPolynomial идет проверка)
 
 #ifdef DEBUG
                 cout << "x1 = " << roots[0] << ", x2 = " << roots[1] << endl;
@@ -78,7 +83,7 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
                             cnt_real_roots = 2; // число действительных корней = 2
                     }
                 }
-                else return -1;
+                else return -1;  // корни находятся очень далеко друг от друга - возвращаем -1(в testPolynomial идет проверка)
             }
         }
         else { // b/a = inf - значит уравнение формально не квадратное, находим единственный корень
@@ -108,21 +113,25 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
         z = -b / (2 * a);
         if (!isinf(z)){
             fp_t fma_bzc = fma(b, z, c);
-            f_z = fma(a, z * z, fma_bzc);
+            f_z = fma(b , z/2 , c);
 
             std::complex<fp_t> sqrt_f = std::sqrt(std::complex<fp_t>((-f_z / a))); // тут впервые может появиться комплексность
 
-            if (!isinf(sqrt_f.real()) && !isinf(sqrt_f.imag())) { // проверка на inf
+            if (!isinf(sqrt_f.real()) || !isinf(sqrt_f.imag())) { // проверка на inf
                 auto z_complex = std::complex<fp_t>(z);
                 auto c_complex = std::complex<fp_t>(c);
 
                     if (b <= 0) { //  (z >= 0)
                         roots[0] = z_complex + sqrt_f;
                         roots[1] = c_complex/ roots[0];
+                        if(isinf(roots[1].real()) || isinf(roots[1].imag())) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
+                            roots.pop_back();
                     }
                     else { //  (z < 0)
                         roots[0] = z_complex - sqrt_f;
                         roots[1] = c_complex/ roots[0];
+                        if(isinf(roots[1].real()) || isinf(roots[1].imag())) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
+                            roots.pop_back();
                     }
             }
             else return roots; // просто возвращаем пустой вектор (в testPolynomial_complex проверка на пустоту)
@@ -139,7 +148,7 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
     return roots; // возвращаем вектор комплексных корней
 }
 
-
+// Для вещественной арифметики
 template<typename fp_t>
 pair<fp_t, fp_t> testPolynomial(unsigned int roots_count) {
     fp_t max_absolute_error, max_relative_error;
@@ -157,27 +166,18 @@ pair<fp_t, fp_t> testPolynomial(unsigned int roots_count) {
     return pair<fp_t, fp_t>(max_absolute_error, max_relative_error);
 }
 
+// Для комплексной арифметики
 template<typename fp_t>
 pair<fp_t, fp_t> testPolynomial_complex(unsigned int roots_count) {
     fp_t max_absolute_error, max_relative_error;
     std::vector<std::complex<fp_t>> roots_computed(roots_count);//вектор компл. корней
-    vector<fp_t> roots(roots_count), roots_computed_real(roots_count); //вектор вещ.корней
+    vector<fp_t> roots(roots_count);
     vector<fp_t> coefficients(roots_count + 1);
     generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, numeric_limits<fp_t>::min(), -1, 1, roots, coefficients);
-    roots_computed = simple_formula_complex<fp_t>(coefficients, roots_computed); //находим корни - комплексный вектор
+    simple_formula_complex<fp_t>(coefficients, roots_computed); //находим корни - комплексный вектор
 
-    if (!roots_computed.empty()) // если корни найдены
-    {
-        roots_computed_real = return_real_roots(roots_computed); //проверяем на комплексность - > отбрасываем
-        // получаем вектор вещественных корней
-        if (!roots_computed_real.empty()) { //если корни действительные - сравниваем
-
-            compare_roots<fp_t>(roots_computed_real.size(), roots.size(), roots_computed_real, roots,
-                                          max_absolute_error, max_relative_error);
-        }
-        else max_absolute_error = 0, max_relative_error = 0; //если корни все же комплексные
-    }
-    else max_absolute_error = 0, max_relative_error = 0;
+    compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots,
+                        max_absolute_error, max_relative_error);
 
     return pair<fp_t, fp_t>(max_absolute_error, max_relative_error);
 }
@@ -186,7 +186,7 @@ int main() {
     // МЕТОД С ВЕЩЕСТВЕННЫМИ ВЫЧИСЛЕНИЯМИ
     float max_absolut_deviation = 0;
     float max_relative_deviation = 0;
-    for (auto i = 0; i < 1'000'000; ++i) {
+    for (auto i = 0; i < 10'000'000; ++i) {
         auto deviation = testPolynomial<float>(2);
 
             if (deviation.first > max_absolut_deviation) {
@@ -203,7 +203,7 @@ int main() {
     // МЕТОД С КОМПЛЕКСНЫМИ ВЫЧИСЛЕНИЯМИ
     float max_absolut_deviation_for_complex = 0;
     float max_relative_deviation_for_complex = 0;
-    for (auto i = 0; i < 1'000'000; ++i) {
+    for (auto i = 0; i < 10'000'000; ++i) {
 
         auto deviation_for_complex = testPolynomial_complex<float>(2);
 

@@ -43,6 +43,16 @@ int compare_roots(
         fp_t &max_relative_error);
 
 
+// For vector of complex roots
+template<typename fp_t>
+int compare_roots(
+        unsigned N_roots_to_check_complex, // number of roots(in roots_to_check_complex)
+        unsigned N_roots_ground_truth, // number of roots(in roots_ground_truth)
+        std::vector<std::complex<fp_t>> &roots_to_check_complex,
+        std::vector<fp_t> &roots_ground_truth,
+        fp_t &max_absolute_error,
+        fp_t &max_relative_error);
+
 // Creates a test polynomial, both in the form of roots, e.g. (x-roots[0])*(x-roots[1])*(quadratic polynomial with no real roots) and
 // represented by coefficients, e.g. (coefficients[4]=1)*x^4 + coefficients[3]*x^3 + coefficients[2]*x^2 + coefficients[1]*x + coefficients[0].
 // The highest-degree coefficient always equals 1. The function returns the actual number of different real roots placed into the vector
@@ -68,6 +78,9 @@ int compare_roots_complex(unsigned N_roots_to_check, // number of roots in roots
         // will be placed
         // here the greatest relative error among all the roots found will be placed
                           fp_t &max_relative_error);
+
+
+
 
 
 //The function checks the roots for complexity and returns the vector of real roots
