@@ -162,12 +162,13 @@ pair<fp_t, fp_t> testPolynomial_complex(unsigned int roots_count) {
     std::vector<std::complex<fp_t>> roots_computed(roots_count);//вектор комплексных корней
     vector<fp_t> roots(roots_count);//вектор истинных корней
     vector<fp_t> coefficients(roots_count + 1); //коэффициенты
-    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, numeric_limits<fp_t>::min(), -1, 1, roots, coefficients);
+    generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, MAX_DISTANCE, -1, 1, roots, coefficients);
     simple_formula_complex<fp_t>(coefficients, roots_computed); //находим корни - комплексный вектор
     // отправляем на сравнение в ф-ию compare_roots, где происходит отбрасывание истинных комплексных корней
     // и вычисление абсолютной и относительной погрешности
     compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots,
                         max_absolute_error, max_relative_error);
+
     return pair<fp_t, fp_t>(max_absolute_error, max_relative_error);
 }
 

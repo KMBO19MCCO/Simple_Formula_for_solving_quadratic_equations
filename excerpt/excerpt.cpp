@@ -330,7 +330,7 @@ int compare_roots(
 
     std::vector<fp_t> roots_to_check;
     for (auto root: roots_to_check_complex) {
-        if (std::numeric_limits<fp_t>::epsilon()*std::abs(root)  > abs(root.imag())) {
+        if (std::numeric_limits<fp_t>::epsilon() > abs(root.imag())) {
             roots_to_check.push_back(root.real());
         }
     }
