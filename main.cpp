@@ -9,18 +9,22 @@
 #include <limits>
 #include "excerpt.h"
 
-
 //#define DEBUG // раскомментировать для вывода отладочного кода (само уравнение+корни)
 #define MAX_DISTANCE 10e-5
-
 using namespace std;
+
+// Определение знака числа
+template <typename fp_t>
+int sgn(fp_t val) {
+    return (fp_t(0) < val) - (val < fp_t(0));
+}
 
 //A simple formula for solving quadratic equations using function evaluation
 // МЕТОД С ВЕЩЕСТВЕННЫМИ ВЫЧИСЛЕНИЯМИ
 template<typename fp_t>
 int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
     fp_t a, b, c, z, f_z;
-    int cnt_real_roots = 0; // число вещественных корней
+    int cnt_real_roots; // число вещественных корней
 
     //Coefficients - > c, b, a
     a = coefficients[2];
@@ -35,32 +39,20 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
         if (!isinf(z)) {
             //Формула: f_z = a * pow(z, 2) + b * z + c;
             // То есть f_z  = a*b^2/4a^2 + b*z + c = (-b/2a)*(-b/2) + b*z + c = (-b/2)*z + b*z + c = (b/2)*z + c
-
             f_z = fma(b , z , 2*c);
-
             // f_z = -(b^2 - 4ac)/4a = -D/4a - - - > D>=0(f_z<=0) - real, D<0(f_z>0) - complex
             if (f_z <= 0) {
                 fp_t sqrt_f = sqrt(-f_z / (2*a)); // sqrt((b^2-4ac)/4a^2) - "половина расстояния между корнями"
-
                 if (!isinf(sqrt_f)) {
                     cnt_real_roots = 2; //число действительных корней = 2
-                        if (b <= 0) { // (z >= 0)
-                            roots[0] = z + sqrt_f; // бОльший по модулю
-                            roots[1] = c / roots[0];
-                            if(isinf(roots[1])) { // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
-                                cnt_real_roots = 1;
-                                roots[1] = 0;
-                            }
-                        }
-                        else {      // (z < 0)
-                            roots[0] = z - sqrt_f; // бОльший по модулю
-                            roots[1] = c / roots[0];
-                            if(isinf(roots[1])){  // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
-                                cnt_real_roots = 1;
-                                roots[1] = 0;
-                            }
-
-                        }
+                        // b < 0 ---> z > 0 => z + sqrt_f
+                        // b > 0 ---> z < 0 => z - sqrt_f
+                        roots[0] = z - sgn(b)*sqrt_f;
+                        roots[1] = c/roots[0];
+                    if(isinf(roots[1])) { // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
+                        cnt_real_roots = 1;
+                        roots[1] = 0;
+                    }
                 }
                 else return -1; // корни находятся очень далеко друг от друга - возвращаем -1(в testPolynomial идет проверка)
 
@@ -118,25 +110,18 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
         z = -b / (2 * a);
         if (!isinf(z)){
             f_z = fma(b , z , 2*c);
-
             std::complex<fp_t> sqrt_f = std::sqrt(std::complex<fp_t>((-f_z / (2*a)))); // тут впервые может появиться комплексность
-
-            if (!isinf(sqrt_f.real()) || !isinf(sqrt_f.imag())) { // проверка на inf
+            if (!isinf(sqrt_f.real()) && !isinf(sqrt_f.imag())) { // проверка на inf
                 auto z_complex = std::complex<fp_t>(z);
                 auto c_complex = std::complex<fp_t>(c);
-
-                    if (b <= 0) { //  (z >= 0)
-                        roots[0] = z_complex + sqrt_f;
-                        roots[1] = c_complex/ roots[0];
-                        if(isinf(roots[1].real()) || isinf(roots[1].imag())) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
-                            roots.pop_back();
-                    }
-                    else { //  (z < 0)
-                        roots[0] = z_complex - sqrt_f;
-                        roots[1] = c_complex/ roots[0];
-                        if(isinf(roots[1].real()) || isinf(roots[1].imag())) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
-                            roots.pop_back();
-                    }
+                auto b_sgn_complex = std::complex<fp_t>(sgn(b));
+                // b > 0 - > z_complex < 0 - > z_complex - b_sgn_complex*sqrt_f
+                // b < 0 - > z_complex > 0 - > z_complex + b_sgn_complex*sqrt_f
+                roots[0] = z_complex - b_sgn_complex*sqrt_f;
+                roots[1] = c_complex/ roots[0];
+                std::complex<fp_t> tmp = roots[1];
+                if(isinf(tmp.real()) || isinf(tmp.imag())) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
+                    roots.pop_back();
             }
             else return roots; // если inf - просто возвращаем пустой вектор (в testPolynomial_complex проверка на пустоту)
 
