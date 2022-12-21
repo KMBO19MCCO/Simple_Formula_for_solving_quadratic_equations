@@ -14,26 +14,21 @@
 using namespace std;
 
 // Определение знака числа
+// разумно сделать inline(встроенную функцию), т к ф-ия небольшая, вызывается часто
 template <typename fp_t>
-int sgn(fp_t val) {
+inline int sgn(fp_t val) {
     return (fp_t(0) < val) - (val < fp_t(0));
 }
 
 //A simple formula for solving quadratic equations using function evaluation
 // МЕТОД С ВЕЩЕСТВЕННЫМИ ВЫЧИСЛЕНИЯМИ
 template<typename fp_t>
-int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
-    fp_t a, b, c, z, f_z;
+int simple_formula(fp_t a, fp_t b, fp_t c, std::vector<fp_t> &roots) {
+    fp_t  z, f_z;
     int cnt_real_roots; // число вещественных корней
-
-    //Coefficients - > c, b, a
-    a = coefficients[2];
-    b = coefficients[1];
-    c = coefficients[0];
 #ifdef DEBUG
     cout << endl << "\tQuadratic equation:" << endl << "\t " << a << "*x^2 + " << b << "*x + " << c << " = 0 " << endl;
 #endif
-
     // не проверяем на а!=0 , т. к. далее проверяем z на бесконечность
         z = -b / (2*a);
         if (!isinf(z)) {
@@ -91,17 +86,11 @@ int simple_formula(std::vector<fp_t> coefficients, std::vector<fp_t> &roots) {
     return cnt_real_roots;
 }
 
-
 // МЕТОД С КОМПЛЕКСНЫМИ ВЫЧИСЛЕНИЯМИ
 template<typename fp_t>
-std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coefficients, std::vector<std::complex<fp_t>> &roots)
+std::vector<std::complex<fp_t>>  simple_formula_complex(fp_t a, fp_t b, fp_t c, std::vector<std::complex<fp_t>> &roots)
 {
-    fp_t a, b, c, z, f_z;
-
-    //Coefficients - > c, b, a
-    a = coefficients[2];
-    b = coefficients[1];
-    c = coefficients[0];
+    fp_t z, f_z;
 
 #ifdef DEBUG
     cout << endl << "\tQuadratic equation:" << endl << "\t " << a << "*x^2 + " << b << "*x + " << c << " = 0 " << endl;
@@ -112,13 +101,10 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
             f_z = fma(b , z , 2*c);
             std::complex<fp_t> sqrt_f = std::sqrt(std::complex<fp_t>((-f_z / (2*a)))); // тут впервые может появиться комплексность
             if (!isinf(sqrt_f.real()) && !isinf(sqrt_f.imag())) { // проверка на inf
-                auto z_complex = std::complex<fp_t>(z);
-                auto c_complex = std::complex<fp_t>(c);
-                auto b_sgn_complex = std::complex<fp_t>(sgn(b));
-                // b > 0 - > z_complex < 0 - > z_complex - b_sgn_complex*sqrt_f
-                // b < 0 - > z_complex > 0 - > z_complex + b_sgn_complex*sqrt_f
-                roots[0] = z_complex - b_sgn_complex*sqrt_f;
-                roots[1] = c_complex/ roots[0];
+                // b < 0 ---> z > 0 => z + sqrt_f
+                // b > 0 ---> z < 0 => z - sqrt_f
+                roots[0] = std::complex<fp_t>(z - sgn(b)*sqrt_f.real(), sqrt_f.imag());
+                roots[1] = std::complex<fp_t>(c/roots[0]);
                 std::complex<fp_t> tmp = roots[1];
                 if(isinf(tmp.real()) || isinf(tmp.imag())) // если 2-ой корень бесконечный - его откидываем, другой "спасаем"
                     roots.pop_back();
@@ -139,13 +125,13 @@ std::vector<std::complex<fp_t>>  simple_formula_complex(std::vector<fp_t> coeffi
 
 // Для вещественной арифметики
 template<typename fp_t>
-pair<fp_t, fp_t> testPolynomial(unsigned int roots_count) {
+auto testPolynomial(unsigned int roots_count) {
     fp_t max_absolute_error, max_relative_error; // макс.абсолют. и относит. погрешности
     vector<fp_t> roots_computed(roots_count); // найденные корни методом
     vector<fp_t> roots(roots_count), coefficients(roots_count + 1); // истинные корни; коэффициенты
     generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, MAX_DISTANCE, -1, 1, roots,
                               coefficients);
-    int cnt_real_roots = simple_formula(coefficients, roots_computed); // находим число вещ.корней и сами корни
+    int cnt_real_roots = simple_formula(coefficients[2], coefficients[1],coefficients[0],  roots_computed); // находим число вещ.корней и сами корни
     if (cnt_real_roots != 0 && cnt_real_roots != -1) { // если корни найдены и мы не попали в какой-то исключ.случай,
                                                         // то сравниваем найденные корни с истинными
          compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots,
@@ -157,17 +143,17 @@ pair<fp_t, fp_t> testPolynomial(unsigned int roots_count) {
 
 // Для комплексной арифметики
 template<typename fp_t>
-pair<fp_t, fp_t> testPolynomial_complex(unsigned int roots_count) {
+auto testPolynomial_complex(unsigned int roots_count) {
     fp_t max_absolute_error, max_relative_error; // максимальные абсолют. и относит. погрешности
     std::vector<std::complex<fp_t>> roots_computed(roots_count);//вектор комплексных корней
     vector<fp_t> roots(roots_count);//вектор истинных корней
     vector<fp_t> coefficients(roots_count + 1); //коэффициенты
     generate_polynomial<fp_t>(roots_count, 0, roots_count, 0, MAX_DISTANCE, -1, 1, roots, coefficients);
-    simple_formula_complex<fp_t>(coefficients, roots_computed); //находим корни - комплексный вектор
-    // отправляем на сравнение в ф-ию compare_roots, где происходит отбрасывание истинных комплексных корней
+    simple_formula_complex<fp_t>(coefficients[2], coefficients[1] , coefficients[0],roots_computed); //находим корни - комплексный вектор
+    //compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots, max_absolute_error, max_relative_error);
+    // отправляем на сравнение в ф-ию compare_roots_complex, где происходит отбрасывание истинных комплексных корней
     // и вычисление абсолютной и относительной погрешности
-    compare_roots<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots,
-                        max_absolute_error, max_relative_error);
+    compare_roots_complex<fp_t>(roots_computed.size(), roots.size(), roots_computed, roots,max_absolute_error, max_relative_error);
 
     return pair<fp_t, fp_t>(max_absolute_error, max_relative_error);
 }

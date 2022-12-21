@@ -391,7 +391,12 @@ int compare_roots_complex(unsigned N_roots_to_check, // number of roots in roots
     if(!roots_to_check_parsed.empty())
         return compare_roots(roots_to_check_parsed.size(), N_roots_ground_truth, roots_to_check_parsed, roots_ground_truth,
                          max_absolute_error, max_relative_error);
-    else return 0;
+    else // нет действительных корней
+    {
+        max_absolute_error = 0;
+        max_relative_error = 0;
+        return -1;
+    }
 }
 
 
