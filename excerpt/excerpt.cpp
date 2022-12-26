@@ -335,8 +335,17 @@ int compare_roots(
         }
     }
     if(!roots_to_check.empty())
-        compare_roots(roots_to_check.size(),N_roots_ground_truth,roots_to_check,roots_ground_truth, max_absolute_error, max_relative_error);
-    else return 0;
+    {
+        return compare_roots(roots_to_check.size(),N_roots_ground_truth,roots_to_check,roots_ground_truth,
+                             max_absolute_error, max_relative_error);
+    }
+    else
+    {
+        max_absolute_error = 0;
+        max_relative_error = 0;
+        return -1;
+    }
+
 }
 
 
@@ -389,8 +398,10 @@ int compare_roots_complex(unsigned N_roots_to_check, // number of roots in roots
     }
 
     if(!roots_to_check_parsed.empty())
+    {
         return compare_roots(roots_to_check_parsed.size(), N_roots_ground_truth, roots_to_check_parsed, roots_ground_truth,
                          max_absolute_error, max_relative_error);
+    }
     else // нет действительных корней
     {
         max_absolute_error = 0;
@@ -418,19 +429,6 @@ template int generate_polynomial<long double>(unsigned P, unsigned N_pairs_of_co
                                               std::vector<long double> &roots,
                                               std::vector<long double> &coefficients);
 
-
-
-template<typename fp_t>
-std::vector<fp_t> return_real_roots(std::vector<std::complex<fp_t>> &roots_to_check)
-{
-    std::vector<fp_t> roots_to_check_real;
-    for (auto root: roots_to_check) {
-        if (std::numeric_limits<fp_t>::epsilon() > std::abs(root) *abs(root.imag())) {
-            roots_to_check_real.push_back(root.real());
-        }
-    }
-    return roots_to_check_real;
-}
 
 template int compare_roots<float>(
         unsigned N_roots_to_check,
@@ -518,11 +516,5 @@ template double pr_product_difference<double>(double a, double b, double c, doub
 template long double pr_product_difference<long double>(long double a, long double b, long double c, long double d);
 
 
-
-template std::vector<float> return_real_roots(std::vector<std::complex<float>> &roots_to_check);
-
-template std::vector<double> return_real_roots(std::vector<std::complex<double>> &roots_to_check);
-
-template std::vector<long double> return_real_roots(std::vector<std::complex<long double>> &roots_to_check);
 
 
